@@ -22,6 +22,7 @@ export const CompactOverlay: React.FC<CompactOverlayProps> = ({
   const vramUsed = stats.gpu_vram_used_gb ?? 0;
   const vramTotal = stats.gpu_vram_total_gb ?? 8;
   const dlSpeed = stats.net_download_mbps ?? 0;
+  const cpuGhz = stats.cpu_ghz ?? 2.4;
 
   return (
     <aside aria-label="Compact Floating HUD" className="compact-hud-bar">
@@ -32,12 +33,10 @@ export const CompactOverlay: React.FC<CompactOverlayProps> = ({
 
       <div className="compact-metric-tile">
         <div className="compact-tile-header">
-          <span className="compact-tile-label">CPU LOAD</span>
+          <span className="compact-tile-label">CPU ({cpuGhz.toFixed(1)}G)</span>
           <span className="compact-tile-val">{stats.cpu_usage.toFixed(0)}%</span>
         </div>
-        <div className="compact-spark-wrap">
-          <Sparkline data={cpuHistory} width={75} height={20} color="var(--accent-primary)" />
-        </div>
+        <div className="compact-spark-wrap"><Sparkline data={cpuHistory} width={70} height={18} color="var(--accent-primary)" /></div>
       </div>
 
       <div className="compact-metric-tile">
@@ -54,7 +53,7 @@ export const CompactOverlay: React.FC<CompactOverlayProps> = ({
           <span className="compact-tile-val text-gpu">{gpuUsage.toFixed(0)}%</span>
         </div>
         <div className="compact-spark-wrap">
-          <Sparkline data={gpuHistory} width={75} height={20} color="#00e5ff" />
+          <Sparkline data={gpuHistory} width={70} height={18} color="#00e5ff" />
         </div>
       </div>
 

@@ -1,9 +1,20 @@
+export interface ProcessItem {
+  pid: number;
+  name: string;
+  cpu_usage: number;
+  memory_mb: number;
+  memory_pct: number;
+}
+
 export interface SystemStats {
   // CPU Metrics
   cpu_usage: number;
   cpu_cores: number[];
   cpu_brand: string;
   cpu_temp: number;
+  cpu_ghz: number;
+  cpu_max_ghz: number;
+  power_plan: string;
 
   // RAM Metrics
   ram_used_gb: number;
@@ -42,4 +53,7 @@ export interface SystemStats {
   net_ping_ms: number;
   net_total_download_gb: number;
   net_total_upload_gb: number;
+
+  // Top 5 Resource Hog Processes (Feature #3)
+  top_processes: ProcessItem[];
 }

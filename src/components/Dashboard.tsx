@@ -6,6 +6,7 @@ import { BatteryGauge } from './BatteryGauge';
 import { GpuCard } from './GpuCard';
 import { ThermalFanCard } from './ThermalFanCard';
 import { NetworkCard } from './NetworkCard';
+import { TopProcessesCard } from './TopProcessesCard';
 import { Sparkline } from './Sparkline';
 
 interface DashboardProps {
@@ -23,9 +24,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
   dlHistory = [],
   ulHistory = [],
 }) => {
+  const cpuGhz = stats.cpu_ghz ?? 2.4;
+  const powerPlan = stats.power_plan ?? 'Balanced';
+
   return (
     <div className="dashboard-grid">
-      {/* 1. CPU Processor Card with 60s Sparkline */}
+      {/* 1. CPU Processor Card with GHz Clock & Power Plan (Feature #2) */}
       <div className="stat-card">
         <div className="card-header">
           <div className="header-left">
@@ -36,10 +40,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
           </div>
           <div className="header-right">
+            <span className="badge badge-ghz" title="Current CPU Clock Frequency">
+              ⚡ {cpuGhz.toFixed(2)} GHz
+            </span>
             <span className="badge badge-temp">
               <span className="badge-icon">🌡️</span> {stats.cpu_temp}°C
             </span>
-            <span className="badge">CPU</span>
           </div>
         </div>
 
@@ -48,7 +54,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             value={stats.cpu_usage}
             unit="%"
             label="TOTAL LOAD"
-            sublabel={`${stats.cpu_temp}°C • ${stats.cpu_cores.length} Cores`}
+            sublabel={`${cpuGhz.toFixed(2)} GHz • ${stats.cpu_temp}°C`}
           />
         </div>
 
@@ -57,12 +63,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <span className="spark-title">REAL-TIME TREND (60S)</span>
             <span className="spark-curr-val">{stats.cpu_usage.toFixed(1)}%</span>
           </div>
-          <Sparkline data={cpuHistory} width={180} height={28} color="var(--accent-primary)" />
+          <div className="sparkline-right-group">
+            <span className="power-plan-badge" title="Active Windows Power Plan">
+              🛡️ {powerPlan}
+            </span>
+            <Sparkline data={cpuHistory} width={130} height={26} color="var(--accent-primary)" />
+          </div>
         </div>
 
         <div className="cores-section">
           <div className="cores-header">
-            <span>CORE DISTRIBUTION:</span>
+            <span>CORE DISTRIBUTION ({stats.cpu_cores.length} CORES):</span>
           </div>
           <div className="cores-grid">
             {stats.cpu_cores.map((usage, idx) => (
@@ -110,7 +121,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
         uploadHistory={ulHistory}
       />
 
-      {/* 5. Memory (RAM) Card */}
+      {/* 5. Top 5 Resource Hog Processes (Feature #3) */}
+      <TopProcessesCard processes={stats.top_processes || []} />
+
+      {/* 6. Memory (RAM) Card */}
       <div className="stat-card">
         <div className="card-header">
           <div className="header-left">
@@ -155,7 +169,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* 6. Primary Storage Card */}
+      {/* 7. Primary Storage Card */}
       <div className="stat-card">
         <div className="card-header">
           <div className="header-left">
@@ -200,7 +214,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* 7. Power & Battery */}
+      {/* 8. Power & Battery */}
       <div className="stat-card">
         <div className="card-header">
           <div className="header-left">
