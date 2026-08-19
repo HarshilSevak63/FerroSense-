@@ -1,0 +1,48 @@
+﻿# Local Setup Guide (ignored as per user requirement)
+GIT_REMOTE_SETUP.md
+Laptop_monitor_poc_spec .md
+
+# Node / Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Tauri & Rust build artifacts
+src-tauri/target/
+target/
+**/*.rs.bk
+Cargo.lock
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment Variables & Secrets
+.env
+.env*.local
+*.pem
+*.key
+
+# Editor / IDE directories
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
