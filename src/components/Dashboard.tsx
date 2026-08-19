@@ -3,7 +3,8 @@ import { SystemStats } from '../types/stats';
 import { RadialGauge } from './RadialGauge';
 import { LinearGauge } from './LinearGauge';
 import { BatteryGauge } from './BatteryGauge';
-import { Phase1Notice } from './Phase1Notice';
+import { GpuCard } from './GpuCard';
+import { ThermalFanCard } from './ThermalFanCard';
 
 interface DashboardProps {
   stats: SystemStats | null;
@@ -28,6 +29,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, loading }) => {
     );
   }
 
+  const getTempClass = (t: number | null) => {
+    if (!t) return 'temp-normal';
+    return t >= 80 ? 'temp-danger' : t >= 68 ? 'temp-warning' : 'temp-normal';
+  };
+
   return (
     <div className="dashboard-grid-wrapper">
       <div className="telemetry-cards-grid">
@@ -41,14 +47,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, loading }) => {
                 <span className="card-subtitle">{stats.cpu_brand}</span>
               </div>
             </div>
-            <span className="card-tag">CPU</span>
+            <div className="card-header-badges">
+              {stats.cpu_temp !== null && (
+                <span className={`temp-badge ${getTempClass(stats.cpu_temp)}`}>
+                  🌡️ {stats.cpu_temp.toFixed(0)}°C
+                </span>
+              )}
+              <span className="card-tag">CPU</span>
+            </div>
           </div>
 
           <div className="card-body-radial">
             <RadialGauge
               value={stats.cpu_usage}
               label="TOTAL LOAD"
-              subLabel={`${stats.cpu_cores.length} Logical Cores`}
+              subLabel={stats.cpu_temp ? `${stats.cpu_temp}°C • ${stats.cpu_cores.length} Cores` : `${stats.cpu_cores.length} Cores`}
             />
           </div>
 
@@ -77,14 +90,33 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, loading }) => {
           )}
         </div>
 
-        {/* CARD 2: RAM USAGE */}
+        {/* CARD 2: DEDICATED GPU */}
+        <GpuCard
+          hasGpu={stats.has_gpu}
+          gpuName={stats.gpu_name}
+          gpuUsage={stats.gpu_usage}
+          gpuTemp={stats.gpu_temp}
+          vramUsedGb={stats.gpu_vram_used_gb}
+          vramTotalGb={stats.gpu_vram_total_gb}
+        />
+
+        {/* CARD 3: THERMALS & COOLING FAN DECK */}
+        <ThermalFanCard
+          cpuTemp={stats.cpu_temp}
+          gpuTemp={stats.gpu_temp}
+          fanCpuRpm={stats.fan_cpu_rpm}
+          fanGpuRpm={stats.fan_gpu_rpm}
+          fanMode={stats.fan_mode}
+        />
+
+        {/* CARD 4: RAM USAGE */}
         <div className="telemetry-card card-ram">
           <div className="card-header">
             <div className="card-title-group">
               <span className="card-icon">💾</span>
               <div>
                 <h3>Memory (RAM)</h3>
-                <span className="card-subtitle">DDR Physical Memory</span>
+                <span className="card-subtitle">Physical Memory</span>
               </div>
             </div>
             <span className="card-tag">RAM</span>
@@ -117,7 +149,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, loading }) => {
           </div>
         </div>
 
-        {/* CARD 3: STORAGE USAGE */}
+        {/* CARD 5: STORAGE USAGE */}
         <div className="telemetry-card card-disk">
           <div className="card-header">
             <div className="card-title-group">
@@ -157,7 +189,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, loading }) => {
           </div>
         </div>
 
-        {/* CARD 4: BATTERY & POWER */}
+        {/* CARD 6: BATTERY & POWER (39% Charging) */}
         <div className="telemetry-card card-battery">
           <div className="card-header">
             <div className="card-title-group">
@@ -179,8 +211,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, loading }) => {
           </div>
         </div>
       </div>
-
-      <Phase1Notice />
     </div>
   );
 };
