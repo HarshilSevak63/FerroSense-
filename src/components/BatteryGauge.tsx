@@ -1,62 +1,66 @@
 import React from 'react';
 
-interface BatteryGaugeProps {
-  batteryPct: number | null;
-  isCharging: boolean | null;
-  isLaptop: boolean;
+export interface BatteryGaugeProps {
+  battery_pct: number | null;
+  is_charging: boolean | null;
+  is_laptop: boolean;
 }
 
 export const BatteryGauge: React.FC<BatteryGaugeProps> = ({
-  batteryPct,
-  isCharging,
-  isLaptop,
+  battery_pct,
+  is_charging,
+  is_laptop,
 }) => {
-  if (!isLaptop || batteryPct === null) {
+  if (!is_laptop || battery_pct === null) {
     return (
       <div className="battery-desktop-fallback">
-        <div className="desktop-icon-badge">🖥️</div>
-        <div className="desktop-fallback-info">
-          <h4>Desktop / AC Station</h4>
-          <p>No internal battery detected. Direct wall power active.</p>
+        <span className="power-icon">🔌</span>
+        <div className="power-meta">
+          <span className="power-status-title">Desktop AC Power</span>
+          <span className="power-status-sub">Continuous Line Input</span>
         </div>
       </div>
     );
   }
 
-  const clampedPct = Math.min(100, Math.max(0, batteryPct));
-  const getBatteryColor = (pct: number) => {
-    if (pct <= 20) return 'var(--accent-danger)';
-    if (pct <= 40) return 'var(--accent-warning)';
-    return 'var(--accent-emerald)';
+  const pct = Math.min(100, Math.max(0, battery_pct));
+  const getBatteryColor = (level: number) => {
+    if (level <= 15) return '#ff3366';
+    if (level <= 30) return '#ffb800';
+    return '#00ff88';
   };
 
-  const batteryColor = getBatteryColor(clampedPct);
+  const barColor = getBatteryColor(pct);
 
   return (
-    <div className="battery-gauge-card">
-      <div className="battery-header-row">
-        <div className="battery-visual-shell">
-          <div
-            className="battery-visual-level"
-            style={{
-              width: `${clampedPct}%`,
-              backgroundColor: batteryColor,
-              boxShadow: `0 0 10px ${batteryColor}88`,
-            }}
-          />
-          <div className="battery-visual-terminal" />
-          {isCharging && <span className="battery-lightning">⚡</span>}
+    <div className="battery-gauge-container">
+      <div className="battery-visual-row">
+        {/* Battery Cell Shell */}
+        <div className="battery-cell-outer">
+          <div className="battery-terminal" />
+          <div className="battery-cell-inner">
+            <div
+              className="battery-cell-fill"
+              style={{
+                width: `${pct}%`,
+                backgroundColor: barColor,
+                boxShadow: `0 0 10px ${barColor}`,
+              }}
+            />
+            {is_charging && <span className="charging-bolt">⚡</span>}
+          </div>
         </div>
-        <div className="battery-pct-display font-mono" style={{ color: batteryColor }}>
-          {clampedPct.toFixed(0)}%
+
+        <div className="battery-numeric-readout">
+          <span className="battery-pct-big" style={{ color: barColor }}>
+            {pct}%
+          </span>
         </div>
       </div>
 
-      <div className="battery-state-pill" style={{ borderColor: `${batteryColor}44` }}>
-        <span className="state-indicator-dot" style={{ backgroundColor: batteryColor }} />
-        <span className="state-text">
-          {isCharging ? '⚡ AC Connected (Charging)' : '🔋 Discharging (On Battery)'}
-        </span>
+      <div className={`battery-status-badge ${is_charging ? 'status-charging' : 'status-discharging'}`}>
+        <span className="battery-dot" />
+        <span>{is_charging ? '⚡ AC Connected (Charging)' : '🔋 On Battery Power'}</span>
       </div>
     </div>
   );

@@ -5,211 +5,199 @@ import { LinearGauge } from './LinearGauge';
 import { BatteryGauge } from './BatteryGauge';
 import { GpuCard } from './GpuCard';
 import { ThermalFanCard } from './ThermalFanCard';
+import { Sparkline } from './Sparkline';
 
 interface DashboardProps {
-  stats: SystemStats | null;
-  loading: boolean;
+  stats: SystemStats;
+  cpuHistory?: number[];
+  gpuHistory?: number[];
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ stats, loading }) => {
-  if (loading && !stats) {
-    return (
-      <div className="dashboard-loading">
-        <div className="loader-spinner" />
-        <p>Connecting to FerroSense Telemetry Engine...</p>
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <div className="dashboard-error">
-        <p>Unable to retrieve system statistics.</p>
-      </div>
-    );
-  }
-
-  const getTempClass = (t: number | null) => {
-    if (!t) return 'temp-normal';
-    return t >= 80 ? 'temp-danger' : t >= 68 ? 'temp-warning' : 'temp-normal';
-  };
-
+export const Dashboard: React.FC<DashboardProps> = ({ stats, cpuHistory = [], gpuHistory = [] }) => {
   return (
-    <div className="dashboard-grid-wrapper">
-      <div className="telemetry-cards-grid">
-        {/* CARD 1: CPU USAGE */}
-        <div className="telemetry-card card-cpu">
-          <div className="card-header">
-            <div className="card-title-group">
-              <span className="card-icon">🧠</span>
-              <div>
-                <h3>Processor</h3>
-                <span className="card-subtitle">{stats.cpu_brand}</span>
-              </div>
-            </div>
-            <div className="card-header-badges">
-              {stats.cpu_temp !== null && (
-                <span className={`temp-badge ${getTempClass(stats.cpu_temp)}`}>
-                  🌡️ {stats.cpu_temp.toFixed(0)}°C
-                </span>
-              )}
-              <span className="card-tag">CPU</span>
+    <div className="dashboard-grid">
+      {/* 1. CPU Processor Card with 60s Sparkline */}
+      <div className="stat-card">
+        <div className="card-header">
+          <div className="header-left">
+            <span className="card-icon" role="img" aria-label="cpu">🧠</span>
+            <div>
+              <h3>Processor</h3>
+              <p className="card-subtitle">{stats.cpu_brand}</p>
             </div>
           </div>
-
-          <div className="card-body-radial">
-            <RadialGauge
-              value={stats.cpu_usage}
-              label="TOTAL LOAD"
-              subLabel={stats.cpu_temp ? `${stats.cpu_temp}°C • ${stats.cpu_cores.length} Cores` : `${stats.cpu_cores.length} Cores`}
-            />
+          <div className="header-right">
+            <span className="badge badge-temp">
+              <span className="badge-icon">🌡️</span> {stats.cpu_temp}°C
+            </span>
+            <span className="badge">CPU</span>
           </div>
-
-          {stats.cpu_cores.length > 0 && (
-            <div className="core-bars-preview">
-              <div className="core-bars-header">Core Distribution:</div>
-              <div className="core-bars-grid">
-                {stats.cpu_cores.slice(0, 16).map((usage, idx) => (
-                  <div key={idx} className="core-bar-track" title={`Core ${idx}: ${usage.toFixed(0)}%`}>
-                    <div
-                      className="core-bar-fill"
-                      style={{
-                        height: `${Math.min(100, Math.max(8, usage))}%`,
-                        backgroundColor:
-                          usage > 80
-                            ? 'var(--accent-danger)'
-                            : usage > 50
-                            ? 'var(--accent-warning)'
-                            : 'var(--accent-cyan)',
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* CARD 2: DEDICATED GPU */}
-        <GpuCard
-          hasGpu={stats.has_gpu}
-          gpuName={stats.gpu_name}
-          gpuUsage={stats.gpu_usage}
-          gpuTemp={stats.gpu_temp}
-          vramUsedGb={stats.gpu_vram_used_gb}
-          vramTotalGb={stats.gpu_vram_total_gb}
+        <div className="gauge-container">
+          <RadialGauge
+            value={stats.cpu_usage}
+            unit="%"
+            label="TOTAL LOAD"
+            sublabel={`${stats.cpu_temp}°C • ${stats.cpu_cores.length} Cores`}
+          />
+        </div>
+
+        <div className="sparkline-row">
+          <div className="sparkline-label-group">
+            <span className="spark-title">REAL-TIME TREND (60S)</span>
+            <span className="spark-curr-val">{stats.cpu_usage.toFixed(1)}%</span>
+          </div>
+          <Sparkline data={cpuHistory} width={180} height={28} color="var(--accent-primary)" />
+        </div>
+
+        <div className="cores-section">
+          <div className="cores-header">
+            <span>CORE DISTRIBUTION:</span>
+          </div>
+          <div className="cores-grid">
+            {stats.cpu_cores.map((usage, idx) => (
+              <div key={idx} className="core-bar-wrapper" title={`Core #${idx + 1}: ${usage}%`}>
+                <div
+                  className={`core-bar-fill ${usage > 85 ? 'core-high' : usage > 50 ? 'core-mid' : ''}`}
+                  style={{ width: `${Math.max(8, usage)}%` }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Dedicated GPU Card */}
+      <GpuCard
+        has_gpu={stats.has_gpu}
+        gpu_name={stats.gpu_name}
+        gpu_usage={stats.gpu_usage}
+        gpu_temp={stats.gpu_temp}
+        gpu_vram_used_gb={stats.gpu_vram_used_gb}
+        gpu_vram_total_gb={stats.gpu_vram_total_gb}
+        gpuHistory={gpuHistory}
+      />
+
+      {/* 3. Thermals & Fan Deck (NitroSense) */}
+      <ThermalFanCard
+        cpuTemp={stats.cpu_temp}
+        gpuTemp={stats.gpu_temp}
+        fanCpuRpm={stats.fan_cpu_rpm}
+        fanGpuRpm={stats.fan_gpu_rpm}
+        fanMode={stats.fan_mode}
+      />
+
+      {/* 4. Memory (RAM) Card */}
+      <div className="stat-card">
+        <div className="card-header">
+          <div className="header-left">
+            <span className="card-icon" role="img" aria-label="ram">💾</span>
+            <div>
+              <h3>Memory (RAM)</h3>
+              <p className="card-subtitle">Physical Memory</p>
+            </div>
+          </div>
+          <span className="badge">RAM</span>
+        </div>
+
+        <div className="ram-details">
+          <div className="stat-split">
+            <div className="stat-item">
+              <span className="stat-label">USED</span>
+              <div className="stat-val-group">
+                <span className="stat-number">{stats.ram_used_gb.toFixed(2)}</span>
+                <span className="stat-unit">GB</span>
+              </div>
+            </div>
+            <div className="stat-divider">/</div>
+            <div className="stat-item">
+              <span className="stat-label">TOTAL</span>
+              <div className="stat-val-group">
+                <span className="stat-number">{stats.ram_total_gb.toFixed(2)}</span>
+                <span className="stat-unit">GB</span>
+              </div>
+            </div>
+          </div>
+
+          <LinearGauge
+            value={stats.ram_used_pct}
+            label={stats.ram_used_pct > 85 ? 'High Load' : 'Normal'}
+            sublabel={`${stats.ram_used_pct.toFixed(1)}%`}
+          />
+
+          <div className="ram-footer-stat">
+            <span>Free Available:</span>
+            <strong>{(stats.ram_total_gb - stats.ram_used_gb).toFixed(2)} GB</strong>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Primary Storage Card */}
+      <div className="stat-card">
+        <div className="card-header">
+          <div className="header-left">
+            <span className="card-icon" role="img" aria-label="disk">💽</span>
+            <div>
+              <h3>Primary Storage</h3>
+              <p className="card-subtitle">Volume ({stats.disk_name})</p>
+            </div>
+          </div>
+          <span className="badge">DRIVE</span>
+        </div>
+
+        <div className="disk-details">
+          <div className="stat-split">
+            <div className="stat-item">
+              <span className="stat-label">USED SPACE</span>
+              <div className="stat-val-group">
+                <span className="stat-number">{stats.disk_used_gb.toFixed(1)}</span>
+                <span className="stat-unit">GB</span>
+              </div>
+            </div>
+            <div className="stat-divider">/</div>
+            <div className="stat-item">
+              <span className="stat-label">CAPACITY</span>
+              <div className="stat-val-group">
+                <span className="stat-number">{stats.disk_total_gb.toFixed(1)}</span>
+                <span className="stat-unit">GB</span>
+              </div>
+            </div>
+          </div>
+
+          <LinearGauge
+            value={stats.disk_used_pct}
+            label="Normal"
+            sublabel={`${stats.disk_used_pct.toFixed(1)}%`}
+          />
+
+          <div className="ram-footer-stat">
+            <span>Available Space:</span>
+            <strong>{(stats.disk_total_gb - stats.disk_used_gb).toFixed(1)} GB</strong>
+          </div>
+        </div>
+      </div>
+
+      {/* 6. Power & Battery */}
+      <div className="stat-card">
+        <div className="card-header">
+          <div className="header-left">
+            <span className="card-icon" role="img" aria-label="battery">🔋</span>
+            <div>
+              <h3>Power & Battery</h3>
+              <p className="card-subtitle">
+                {stats.is_laptop ? 'Integrated Battery Pack' : 'Desktop Power Supply'}
+              </p>
+            </div>
+          </div>
+          <span className="badge">POWER</span>
+        </div>
+
+        <BatteryGauge
+          battery_pct={stats.battery_pct}
+          is_charging={stats.is_charging}
+          is_laptop={stats.is_laptop}
         />
-
-        {/* CARD 3: THERMALS & COOLING FAN DECK */}
-        <ThermalFanCard
-          cpuTemp={stats.cpu_temp}
-          gpuTemp={stats.gpu_temp}
-          fanCpuRpm={stats.fan_cpu_rpm}
-          fanGpuRpm={stats.fan_gpu_rpm}
-          fanMode={stats.fan_mode}
-        />
-
-        {/* CARD 4: RAM USAGE */}
-        <div className="telemetry-card card-ram">
-          <div className="card-header">
-            <div className="card-title-group">
-              <span className="card-icon">💾</span>
-              <div>
-                <h3>Memory (RAM)</h3>
-                <span className="card-subtitle">Physical Memory</span>
-              </div>
-            </div>
-            <span className="card-tag">RAM</span>
-          </div>
-
-          <div className="card-body-metrics">
-            <div className="metric-large-row">
-              <div className="metric-col">
-                <span className="metric-label">USED</span>
-                <span className="metric-val font-mono text-cyan">{stats.ram_used_gb.toFixed(2)} <span className="unit">GB</span></span>
-              </div>
-              <div className="metric-divider">/</div>
-              <div className="metric-col">
-                <span className="metric-label">TOTAL</span>
-                <span className="metric-val font-mono">{stats.ram_total_gb.toFixed(2)} <span className="unit">GB</span></span>
-              </div>
-            </div>
-
-            <LinearGauge
-              value={stats.ram_used_pct}
-              max={100}
-              showPercentage={true}
-              colorScheme="dynamic"
-            />
-
-            <div className="ram-subdetails">
-              <span>Free Available:</span>
-              <strong className="font-mono">{(stats.ram_total_gb - stats.ram_used_gb).toFixed(2)} GB</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* CARD 5: STORAGE USAGE */}
-        <div className="telemetry-card card-disk">
-          <div className="card-header">
-            <div className="card-title-group">
-              <span className="card-icon">💽</span>
-              <div>
-                <h3>Primary Storage</h3>
-                <span className="card-subtitle">Volume ({stats.disk_name})</span>
-              </div>
-            </div>
-            <span className="card-tag">DRIVE</span>
-          </div>
-
-          <div className="card-body-metrics">
-            <div className="metric-large-row">
-              <div className="metric-col">
-                <span className="metric-label">USED SPACE</span>
-                <span className="metric-val font-mono text-purple">{stats.disk_used_gb.toFixed(1)} <span className="unit">GB</span></span>
-              </div>
-              <div className="metric-divider">/</div>
-              <div className="metric-col">
-                <span className="metric-label">CAPACITY</span>
-                <span className="metric-val font-mono">{stats.disk_total_gb.toFixed(1)} <span className="unit">GB</span></span>
-              </div>
-            </div>
-
-            <LinearGauge
-              value={stats.disk_used_pct}
-              max={100}
-              showPercentage={true}
-              colorScheme="purple"
-            />
-
-            <div className="ram-subdetails">
-              <span>Available Space:</span>
-              <strong className="font-mono">{(stats.disk_total_gb - stats.disk_used_gb).toFixed(1)} GB</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* CARD 6: BATTERY & POWER (39% Charging) */}
-        <div className="telemetry-card card-battery">
-          <div className="card-header">
-            <div className="card-title-group">
-              <span className="card-icon">🔋</span>
-              <div>
-                <h3>Power & Battery</h3>
-                <span className="card-subtitle">{stats.is_laptop ? 'Integrated Battery Pack' : 'Desktop Power Supply'}</span>
-              </div>
-            </div>
-            <span className="card-tag">POWER</span>
-          </div>
-
-          <div className="card-body-metrics">
-            <BatteryGauge
-              batteryPct={stats.battery_pct}
-              isCharging={stats.is_charging}
-              isLaptop={stats.is_laptop}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );

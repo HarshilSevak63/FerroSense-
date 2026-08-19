@@ -1,84 +1,94 @@
 import React from 'react';
 import { RadialGauge } from './RadialGauge';
 import { LinearGauge } from './LinearGauge';
+import { Sparkline } from './Sparkline';
 
-interface GpuCardProps {
-  hasGpu: boolean;
-  gpuName: string | null;
-  gpuUsage: number | null;
-  gpuTemp: number | null;
-  vramUsedGb: number | null;
-  vramTotalGb: number | null;
+export interface GpuCardProps {
+  has_gpu: boolean;
+  gpu_name: string | null;
+  gpu_usage: number | null;
+  gpu_temp: number | null;
+  gpu_vram_used_gb: number | null;
+  gpu_vram_total_gb: number | null;
+  gpuHistory?: number[];
 }
 
 export const GpuCard: React.FC<GpuCardProps> = ({
-  hasGpu,
-  gpuName,
-  gpuUsage,
-  gpuTemp,
-  vramUsedGb,
-  vramTotalGb,
+  has_gpu,
+  gpu_name,
+  gpu_usage,
+  gpu_temp,
+  gpu_vram_used_gb,
+  gpu_vram_total_gb,
+  gpuHistory = [],
 }) => {
-  if (!hasGpu || gpuUsage === null) {
+  if (!has_gpu) {
     return (
-      <div className="telemetry-card card-gpu">
+      <div className="stat-card">
         <div className="card-header">
-          <div className="card-title-group">
-            <span className="card-icon">🎮</span>
+          <div className="header-left">
+            <span className="card-icon" role="img" aria-label="gpu">🎮</span>
             <div>
-              <h3>Dedicated GPU</h3>
-              <span className="card-subtitle">Integrated Graphics Only</span>
+              <h3>Graphics (GPU)</h3>
+              <p className="card-subtitle">Integrated / Power Saver</p>
             </div>
           </div>
-          <span className="card-tag">GPU</span>
         </div>
-        <div className="gpu-fallback-body">
-          <p>No dedicated discrete GPU detected. Using CPU integrated graphics.</p>
+        <div className="empty-gpu-state">
+          <p>Integrated graphics active.</p>
         </div>
       </div>
     );
   }
 
-  const vramPct = vramTotalGb && vramUsedGb ? (vramUsedGb / vramTotalGb) * 100 : 0;
-  const getTempClass = (t: number) => (t >= 80 ? 'temp-danger' : t >= 68 ? 'temp-warning' : 'temp-normal');
+  const usageVal = gpu_usage ?? 0;
+  const tempVal = gpu_temp ?? 45;
+  const vramUsed = gpu_vram_used_gb ?? 0;
+  const vramTotal = gpu_vram_total_gb ?? 8;
+  const vramPct = vramTotal > 0 ? (vramUsed / vramTotal) * 100 : 0;
 
   return (
-    <div className="telemetry-card card-gpu">
+    <div className="stat-card">
       <div className="card-header">
-        <div className="card-title-group">
-          <span className="card-icon">🎮</span>
+        <div className="header-left">
+          <span className="card-icon" role="img" aria-label="gpu">🎮</span>
           <div>
             <h3>Graphics (GPU)</h3>
-            <span className="card-subtitle">{gpuName || 'Discrete GPU'}</span>
+            <p className="card-subtitle">{gpu_name || 'NVIDIA Dedicated GPU'}</p>
           </div>
         </div>
-        <div className="card-header-badges">
-          {gpuTemp !== null && (
-            <span className={`temp-badge ${getTempClass(gpuTemp)}`}>
-              🌡️ {gpuTemp.toFixed(0)}°C
-            </span>
-          )}
-          <span className="card-tag">GPU</span>
+        <div className="header-right">
+          <span className="badge badge-temp">
+            <span className="badge-icon">🌡️</span> {tempVal}°C
+          </span>
+          <span className="badge">GPU</span>
         </div>
       </div>
 
-      <div className="card-body-radial">
+      <div className="gauge-container">
         <RadialGauge
-          value={gpuUsage}
+          value={usageVal}
+          unit="%"
           label="GPU LOAD"
-          subLabel={gpuTemp ? `${gpuTemp}°C Core` : undefined}
+          sublabel={`${tempVal}°C Core`}
         />
       </div>
 
-      {vramTotalGb && vramUsedGb !== null && (
-        <div className="vram-section">
-          <div className="vram-header">
-            <span>VRAM Video Memory:</span>
-            <strong className="font-mono">{vramUsedGb.toFixed(2)} / {vramTotalGb.toFixed(1)} GB</strong>
-          </div>
-          <LinearGauge value={vramPct} max={100} showPercentage={false} colorScheme="purple" />
+      <div className="sparkline-row">
+        <div className="sparkline-label-group">
+          <span className="spark-title">GPU USAGE HISTORY</span>
+          <span className="spark-curr-val">{usageVal.toFixed(1)}%</span>
         </div>
-      )}
+        <Sparkline data={gpuHistory} width={180} height={28} color="#00e5ff" />
+      </div>
+
+      <div className="vram-section">
+        <div className="vram-header">
+          <span>VRAM Video Memory:</span>
+          <span className="vram-values">{vramUsed.toFixed(2)} / {vramTotal.toFixed(1)} GB</span>
+        </div>
+        <LinearGauge value={vramPct} />
+      </div>
     </div>
   );
 };
