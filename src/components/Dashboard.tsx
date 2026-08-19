@@ -5,15 +5,24 @@ import { LinearGauge } from './LinearGauge';
 import { BatteryGauge } from './BatteryGauge';
 import { GpuCard } from './GpuCard';
 import { ThermalFanCard } from './ThermalFanCard';
+import { NetworkCard } from './NetworkCard';
 import { Sparkline } from './Sparkline';
 
 interface DashboardProps {
   stats: SystemStats;
   cpuHistory?: number[];
   gpuHistory?: number[];
+  dlHistory?: number[];
+  ulHistory?: number[];
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ stats, cpuHistory = [], gpuHistory = [] }) => {
+export const Dashboard: React.FC<DashboardProps> = ({
+  stats,
+  cpuHistory = [],
+  gpuHistory = [],
+  dlHistory = [],
+  ulHistory = [],
+}) => {
   return (
     <div className="dashboard-grid">
       {/* 1. CPU Processor Card with 60s Sparkline */}
@@ -82,13 +91,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, cpuHistory = [], gp
       {/* 3. Thermals & Fan Deck (NitroSense) */}
       <ThermalFanCard
         cpuTemp={stats.cpu_temp}
-        gpuTemp={stats.gpu_temp}
+        gpuTemp={stats.gpu_temp ?? 45}
         fanCpuRpm={stats.fan_cpu_rpm}
         fanGpuRpm={stats.fan_gpu_rpm}
-        fanMode={stats.fan_mode}
+        fanMode={(stats.fan_mode as any) || 'Auto'}
       />
 
-      {/* 4. Memory (RAM) Card */}
+      {/* 4. Network Card (Feature #1) */}
+      <NetworkCard
+        downloadMbps={stats.net_download_mbps || 0}
+        uploadMbps={stats.net_upload_mbps || 0}
+        adapterName={stats.net_adapter_name || 'Wi-Fi 6 Adapter'}
+        linkSpeed={stats.net_link_speed || '1.2 Gbps'}
+        pingMs={stats.net_ping_ms || 20}
+        totalDownloadGb={stats.net_total_download_gb || 0}
+        totalUploadGb={stats.net_total_upload_gb || 0}
+        downloadHistory={dlHistory}
+        uploadHistory={ulHistory}
+      />
+
+      {/* 5. Memory (RAM) Card */}
       <div className="stat-card">
         <div className="card-header">
           <div className="header-left">
@@ -133,7 +155,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, cpuHistory = [], gp
         </div>
       </div>
 
-      {/* 5. Primary Storage Card */}
+      {/* 6. Primary Storage Card */}
       <div className="stat-card">
         <div className="card-header">
           <div className="header-left">
@@ -178,7 +200,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, cpuHistory = [], gp
         </div>
       </div>
 
-      {/* 6. Power & Battery */}
+      {/* 7. Power & Battery */}
       <div className="stat-card">
         <div className="card-header">
           <div className="header-left">

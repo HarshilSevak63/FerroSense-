@@ -12,6 +12,8 @@ export function useSystemStats(pollingIntervalMs: number = 1500) {
   const [cpuHistory, setCpuHistory] = useState<number[]>(() => Array(25).fill(25));
   const [gpuHistory, setGpuHistory] = useState<number[]>(() => Array(25).fill(20));
   const [tempHistory, setTempHistory] = useState<number[]>(() => Array(25).fill(50));
+  const [dlHistory, setDlHistory] = useState<number[]>(() => Array(25).fill(2.5));
+  const [ulHistory, setUlHistory] = useState<number[]>(() => Array(25).fill(0.8));
 
   const fetchStats = useCallback(async () => {
     try {
@@ -30,10 +32,14 @@ export function useSystemStats(pollingIntervalMs: number = 1500) {
         const cpuVal = typeof data.cpu_usage === 'number' ? data.cpu_usage : 25;
         const gpuVal = typeof data.gpu_usage === 'number' ? data.gpu_usage : 20;
         const tempVal = typeof data.cpu_temp === 'number' ? data.cpu_temp : 50;
+        const dlVal = typeof data.net_download_mbps === 'number' ? data.net_download_mbps : 2.5;
+        const ulVal = typeof data.net_upload_mbps === 'number' ? data.net_upload_mbps : 0.8;
 
         setCpuHistory((prev) => [...prev.slice(1), cpuVal]);
         setGpuHistory((prev) => [...prev.slice(1), gpuVal]);
         setTempHistory((prev) => [...prev.slice(1), tempVal]);
+        setDlHistory((prev) => [...prev.slice(1), dlVal]);
+        setUlHistory((prev) => [...prev.slice(1), ulVal]);
       }
       setError(null);
       setLastUpdated(new Date());
@@ -60,6 +66,8 @@ export function useSystemStats(pollingIntervalMs: number = 1500) {
     cpuHistory,
     gpuHistory,
     tempHistory,
+    dlHistory,
+    ulHistory,
     refreshNow: fetchStats,
   };
 }

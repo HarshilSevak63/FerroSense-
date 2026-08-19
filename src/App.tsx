@@ -6,7 +6,18 @@ import { ThemeSelector } from './components/ThemeSelector';
 import { THEMES, ThemeId } from './types/theme';
 
 export function App() {
-  const { stats, loading, error, lastUpdated, cpuHistory, gpuHistory, refreshNow } = useSystemStats(1500);
+  const {
+    stats,
+    loading,
+    error,
+    lastUpdated,
+    cpuHistory,
+    gpuHistory,
+    dlHistory,
+    ulHistory,
+    refreshNow,
+  } = useSystemStats(1500);
+
   const [currentTheme, setCurrentTheme] = useState<ThemeId>('cyan');
   const [isCompactMode, setIsCompactMode] = useState<boolean>(false);
 
@@ -86,7 +97,13 @@ export function App() {
             <p>⚠️ {error}</p>
           </div>
         ) : stats ? (
-          <Dashboard stats={stats} cpuHistory={cpuHistory} gpuHistory={gpuHistory} />
+          <Dashboard
+            stats={stats}
+            cpuHistory={cpuHistory}
+            gpuHistory={gpuHistory}
+            dlHistory={dlHistory}
+            ulHistory={ulHistory}
+          />
         ) : null}
       </main>
     </div>

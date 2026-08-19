@@ -1,11 +1,11 @@
 import React from 'react';
 
 interface ThermalFanCardProps {
-  cpuTemp: number | null;
-  gpuTemp: number | null;
-  fanCpuRpm: number | null;
-  fanGpuRpm: number | null;
-  fanMode: 'Auto' | 'Max' | 'Custom';
+  cpuTemp: number;
+  gpuTemp: number;
+  fanCpuRpm: number;
+  fanGpuRpm: number;
+  fanMode?: 'Auto' | 'Max' | 'Custom';
 }
 
 export const ThermalFanCard: React.FC<ThermalFanCardProps> = ({
@@ -13,75 +13,81 @@ export const ThermalFanCard: React.FC<ThermalFanCardProps> = ({
   gpuTemp,
   fanCpuRpm,
   fanGpuRpm,
-  fanMode,
+  fanMode = 'Auto',
 }) => {
-  const getTempColor = (t: number | null) => {
-    if (!t) return 'var(--text-muted)';
-    if (t >= 80) return 'var(--accent-danger)';
-    if (t >= 68) return 'var(--accent-warning)';
-    return 'var(--accent-emerald)';
+  const getTempClass = (temp: number) => {
+    if (temp >= 80) return 'temp-hot';
+    if (temp >= 65) return 'temp-warm';
+    return 'temp-cool';
   };
 
+  const getStatusPill = (temp: number) => {
+    if (temp >= 80) return { label: '🔥 Hot', color: 'rgba(255, 51, 102, 0.15)', text: '#ff3366' };
+    if (temp >= 65) return { label: '⚠️ Warm', color: 'rgba(255, 184, 0, 0.15)', text: '#ffb800' };
+    return { label: '🟢 Cool', color: 'rgba(0, 255, 136, 0.15)', text: '#00ff88' };
+  };
+
+  const cpuStatus = getStatusPill(cpuTemp);
+  const gpuStatus = getStatusPill(gpuTemp);
+
   return (
-    <div className="telemetry-card card-thermals-fans">
+    <div className="stat-card">
       <div className="card-header">
-        <div className="card-title-group">
-          <span className="card-icon">🌀</span>
+        <div className="header-left">
+          <span className="card-icon" role="img" aria-label="cooling">🌀</span>
           <div>
             <h3>Thermals & Fans</h3>
-            <span className="card-subtitle">NitroSense Cooling Deck</span>
+            <p className="card-subtitle">NitroSense Cooling Deck</p>
           </div>
         </div>
-        <div className="fan-mode-badge font-mono">
-          MODE: <span className="text-cyan">{fanMode}</span>
-        </div>
+        <span className="badge">MODE: {fanMode}</span>
       </div>
 
-      <div className="thermals-fans-grid">
-        {/* Dual Temperature Meters */}
-        <div className="thermal-duo-container">
-          <div className="thermal-stat-box">
-            <span className="stat-label">CPU TEMP</span>
-            <div className="thermal-readout font-mono" style={{ color: getTempColor(cpuTemp) }}>
-              {cpuTemp ? `${cpuTemp.toFixed(1)}°C` : 'N/A'}
-            </div>
-            <span className="thermal-status-pill">
-              {cpuTemp && cpuTemp < 65 ? '🟢 Cool' : cpuTemp && cpuTemp < 80 ? '🟡 Warm' : '🔴 Hot'}
+      <div className="cooling-deck">
+        {/* Dual Core Temperatures */}
+        <div className="thermals-row">
+          <div className="thermal-box">
+            <span className="thermal-tag">CPU TEMP</span>
+            <span className={`thermal-reading ${getTempClass(cpuTemp)}`}>
+              {cpuTemp.toFixed(1)}°C
+            </span>
+            <span
+              className="status-pill"
+              style={{ backgroundColor: cpuStatus.color, color: cpuStatus.text }}
+            >
+              {cpuStatus.label}
             </span>
           </div>
 
-          <div className="thermal-stat-divider" />
-
-          <div className="thermal-stat-box">
-            <span className="stat-label">GPU TEMP</span>
-            <div className="thermal-readout font-mono" style={{ color: getTempColor(gpuTemp) }}>
-              {gpuTemp ? `${gpuTemp.toFixed(1)}°C` : 'N/A'}
-            </div>
-            <span className="thermal-status-pill">
-              {gpuTemp && gpuTemp < 65 ? '🟢 Cool' : gpuTemp && gpuTemp < 80 ? '🟡 Warm' : '🔴 Hot'}
+          <div className="thermal-box">
+            <span className="thermal-tag">GPU TEMP</span>
+            <span className={`thermal-reading ${getTempClass(gpuTemp)}`}>
+              {gpuTemp.toFixed(1)}°C
+            </span>
+            <span
+              className="status-pill"
+              style={{ backgroundColor: gpuStatus.color, color: gpuStatus.text }}
+            >
+              {gpuStatus.label}
             </span>
           </div>
         </div>
 
-        {/* Dual Fan Dials */}
-        <div className="fan-rpm-duo">
-          <div className="fan-rpm-dial">
-            <div className="fan-icon-anim spin-fan">🌀</div>
-            <div className="fan-details">
-              <span className="fan-name">CPU FAN</span>
-              <span className="fan-speed font-mono text-cyan">
-                {fanCpuRpm ? `${fanCpuRpm} RPM` : 'Auto'}
-              </span>
+        {/* Dual Cooling Fan RPM Speeds */}
+        <div className="fans-row">
+          <div className="fan-box">
+            <span className="fan-icon-spin" role="img" aria-label="fan">🌀</span>
+            <div className="fan-meta">
+              <span className="fan-label">CPU FAN</span>
+              <span className="fan-rpm">{fanCpuRpm} <small style={{ fontSize: 10, color: 'var(--text-secondary)' }}>RPM</small></span>
             </div>
           </div>
 
-          <div className="fan-rpm-dial">
-            <div className="fan-icon-anim spin-fan">🌀</div>
-            <div className="fan-details">
-              <span className="fan-name">GPU FAN</span>
-              <span className="fan-speed font-mono text-purple">
-                {fanGpuRpm ? `${fanGpuRpm} RPM` : 'Auto'}
-              </span>
+          <div className="fan-box">
+            <span className="fan-icon-spin" role="img" aria-label="fan">🌀</span>
+            <div className="fan-meta">
+              <span className="fan-label">GPU FAN</span>
+              <span className="fan-rpm">{fanGpuRpm} <small style={{ fontSize: 10, color: 'var(--text-secondary)' }}>RPM</small></span>
             </div>
           </div>
         </div>

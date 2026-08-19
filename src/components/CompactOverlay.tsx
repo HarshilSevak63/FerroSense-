@@ -21,6 +21,7 @@ export const CompactOverlay: React.FC<CompactOverlayProps> = ({
   const gpuTemp = stats.gpu_temp ?? 45;
   const vramUsed = stats.gpu_vram_used_gb ?? 0;
   const vramTotal = stats.gpu_vram_total_gb ?? 8;
+  const dlSpeed = stats.net_download_mbps ?? 0;
 
   return (
     <aside aria-label="Compact Floating HUD" className="compact-hud-bar">
@@ -35,7 +36,7 @@ export const CompactOverlay: React.FC<CompactOverlayProps> = ({
           <span className="compact-tile-val">{stats.cpu_usage.toFixed(0)}%</span>
         </div>
         <div className="compact-spark-wrap">
-          <Sparkline data={cpuHistory} width={80} height={22} color="var(--accent-primary)" />
+          <Sparkline data={cpuHistory} width={75} height={20} color="var(--accent-primary)" />
         </div>
       </div>
 
@@ -53,7 +54,7 @@ export const CompactOverlay: React.FC<CompactOverlayProps> = ({
           <span className="compact-tile-val text-gpu">{gpuUsage.toFixed(0)}%</span>
         </div>
         <div className="compact-spark-wrap">
-          <Sparkline data={gpuHistory} width={80} height={22} color="#00e5ff" />
+          <Sparkline data={gpuHistory} width={75} height={20} color="#00e5ff" />
         </div>
       </div>
 
@@ -63,6 +64,14 @@ export const CompactOverlay: React.FC<CompactOverlayProps> = ({
           <span className="compact-tile-val text-temp">{gpuTemp}°C</span>
         </div>
         <div className="compact-sub-pill">{vramUsed.toFixed(1)}/{vramTotal.toFixed(0)} GB</div>
+      </div>
+
+      <div className="compact-metric-tile">
+        <div className="compact-tile-header">
+          <span className="compact-tile-label">NETWORK</span>
+          <span className="compact-tile-val text-net">↓ {dlSpeed.toFixed(1)} <small>M/s</small></span>
+        </div>
+        <div className="compact-sub-pill">{stats.net_ping_ms ?? 20}ms Ping</div>
       </div>
 
       <div className="compact-metric-tile">

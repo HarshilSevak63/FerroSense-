@@ -773,3 +773,113 @@ body {
   color: var(--text-secondary);
   margin-top: 2px;
 }
+
+/* Network Card Styling */
+.badge-ping {
+  background: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+  border-color: rgba(0, 255, 136, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ping-dot {
+  width: 6px;
+  height: 6px;
+  background: #00ff88;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #00ff88;
+}
+
+.network-speeds-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.net-speed-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.net-box-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.net-dir-icon {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.net-dir-title {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.net-speed-num {
+  font-size: 16px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  margin-left: auto;
+}
+
+.dl-color {
+  color: #00f0ff;
+}
+
+.ul-color {
+  color: #00ff88;
+}
+
+.net-speed-num small {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.net-sparkline-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2px;
+}
+
+.net-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  font-size: 11px;
+}
+
+.net-traffic-stat {
+  display: flex;
+  gap: 6px;
+  color: var(--text-secondary);
+}
+
+.net-traffic-stat strong {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.net-traffic-divider {
+  color: var(--text-muted);
+  opacity: 0.4;
+}
+
+.compact-tile-val.text-net {
+  color: #00f0ff;
+}
